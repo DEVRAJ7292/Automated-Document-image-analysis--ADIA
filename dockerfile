@@ -1,8 +1,9 @@
 FROM python:3.11-slim
 
-# System deps (OCR + PDF)
+# System dependencies (OCR + PDF)
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
+    tesseract-ocr-eng \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
@@ -10,22 +11,19 @@ RUN apt-get update && apt-get install -y \
     poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Working directory
+# Set working directory
 WORKDIR /app
 
-# Install python deps first (layer caching)
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source
+# Copy application code
 COPY src/ src/
 COPY data/ data/
 
-# Environment
-ENV PYTHONPATH=/app/src
-
-# Expose API port
+# Expose port (Render requirement)
 EXPOSE 8000
 
-# Start FastAPI
-CMD ["uvicorn", "adia.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+#  THIS IS THE MOST IMPORTANT PART
+CMD ["uvicorn", "adia.main:app", "--host", "0.0.0.0", "--port", "8000"]
