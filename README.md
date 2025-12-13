@@ -1,3 +1,24 @@
+---
+title: ADIA – Automated Document Image Analysis
+emoji: 📄
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
+# ADIA – Automated Document Image Analysis
+
+Industry-grade AI system for OCR, document understanding, and RAG-based querying.
+
+## Features
+- OCR with Tesseract
+- PDF parsing
+- FastAPI backend
+- Dockerized deployment
+- Hugging Face Spaces hosting
+
 # ADIA — Automated Document Intelligence
 
 ADIA is an end-to-end **document intelligence system** that ingests PDFs and images, extracts text intelligently, and answers natural-language questions over the content using a Retrieval-Augmented Generation (RAG) pipeline.
