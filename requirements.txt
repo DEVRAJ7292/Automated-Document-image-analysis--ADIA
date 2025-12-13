@@ -1,11 +1,11 @@
 # ===============================
-# Core Web Framework
+# Web Framework & Server
 # ===============================
 fastapi
 uvicorn[standard]
 
 # ===============================
-# Configuration & Environment
+# Configuration & Validation
 # ===============================
 python-dotenv
 pydantic>=2.0
@@ -19,7 +19,7 @@ sqlalchemy-utils
 alembic
 
 # ===============================
-# File Uploads & Parsing
+# File Uploads & Async IO
 # ===============================
 python-multipart
 aiofiles
@@ -33,7 +33,13 @@ pytesseract
 pdf2image
 
 # ===============================
-# NLP, Embeddings & Vector Search
+# PDF & Document Processing
+# ===============================
+pdfplumber
+pymupdf
+
+# ===============================
+# Embeddings, ML & Vector Search
 # ===============================
 numpy
 scipy
@@ -42,10 +48,15 @@ sentence-transformers
 faiss-cpu
 
 # ===============================
-# Document Processing (Optional but Professional)
+# LLM (Gemini)
 # ===============================
-pymupdf
-pdfplumber
+google-generativeai
+
+# ===============================
+# HTTP & Networking
+# ===============================
+requests
+httpx
 
 # ===============================
 # Logging & Utilities
@@ -54,12 +65,6 @@ loguru
 tqdm
 
 # ===============================
-# HTTP & Async Support
-# ===============================
-httpx
-requests
-
-# ===============================
-# Deployment / Stability
+# Production Server (optional but safe)
 # ===============================
 gunicorn
