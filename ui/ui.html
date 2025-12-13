@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ADIA — Document Intelligence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; }
+    .fade-in { animation: fadeIn .25s ease-out; }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(4px)} to {opacity:1; transform:none} }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen transition-colors" id="app">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight">ADIA</h1>
+        <p class="text-sm text-slate-400">Automated Document Intelligence</p>
+      </div>
+      <button onclick="toggleTheme()"
+        class="text-sm px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-800">
+        Toggle Theme
+      </button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-5xl mx-auto px-6 py-10 space-y-10">
+
+    <!-- Upload -->
+    <section class="bg-white text-slate-900 rounded-xl shadow-lg p-6 fade-in">
+      <h2 class="text-lg font-medium mb-4">Upload Document</h2>
+
+      <div id="dropZone"
+        class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center cursor-pointer hover:border-indigo-500 transition">
+        <p class="text-slate-600">Drag & drop a PDF or image here</p>
+        <p class="text-xs text-slate-400 mt-1">or click to browse</p>
+        <input type="file" id="fileInput" class="hidden" />
+      </div>
+
+      <div class="mt-4 flex items-center gap-3">
+        <button onclick="uploadFile()"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
+          Upload
+        </button>
+        <div class="flex-1">
+          <div class="h-2 bg-slate-200 rounded overflow-hidden">
+            <div id="progressBar" class="h-2 bg-emerald-500 w-0 transition-all"></div>
+          </div>
+        </div>
+      </div>
+
+      <p id="uploadStatus" class="text-sm mt-3"></p>
+
+      <!-- Uploaded files -->
+      <ul id="fileList" class="mt-4 text-sm text-slate-700 space-y-1"></ul>
+    </section>
+
+    <!-- Query -->
+    <section class="bg-white text-slate-900 rounded-xl shadow-lg p-6 fade-in">
+      <h2 class="text-lg font-medium mb-4">Ask a Question</h2>
+
+      <textarea id="questionInput" rows="3"
+        placeholder="What is the date in the document?"
+        class="w-full border border-slate-300 rounded-md p-2 mb-4"></textarea>
+
+      <button onclick="askQuestion()"
+        class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">
+        Ask
+      </button>
+
+      <div id="answerBox" class="mt-6 hidden">
+        <h3 class="text-sm font-semibold text-slate-600">Answer</h3>
+        <p id="answerText" class="mt-2 text-lg"></p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div id="toast"
+    class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-2 rounded-lg shadow-lg hidden"></div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+    const app = document.getElementById("app");
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const progressBar = document.getElementById("progressBar");
+    const fileList = document.getElementById("fileList");
+
+    // Theme
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    setTheme(savedTheme);
+    function toggleTheme() {
+      const t = app.classList.contains("bg-slate-950") ? "light" : "dark";
+      setTheme(t);
+      localStorage.setItem("theme", t);
+    }
+    function setTheme(t) {
+      if (t === "light") {
+        app.className = "bg-slate-100 text-slate-900 min-h-screen transition-colors";
+      } else {
+        app.className = "bg-slate-950 text-slate-100 min-h-screen transition-colors";
+      }
+    }
+
+    // Drag & Drop
+    dropZone.onclick = () => fileInput.click();
+    dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add("border-indigo-500"); };
+    dropZone.ondragleave = () => dropZone.classList.remove("border-indigo-500");
+    dropZone.ondrop = e => {
+      e.preventDefault();
+      dropZone.classList.remove("border-indigo-500");
+      fileInput.files = e.dataTransfer.files;
+    };
+
+    // Toast
+    function toast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.remove("hidden");
+      setTimeout(() => t.classList.add("hidden"), 2200);
+    }
+
+    // Upload with progress
+    async function uploadFile() {
+      if (!fileInput.files.length) return toast("Select a file first");
+
+      progressBar.style.width = "0%";
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_BASE}/upload`);
+
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          progressBar.style.width = `${(e.loaded / e.total) * 100}%`;
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          progressBar.style.width = "100%";
+          fileList.innerHTML += `<li>✓ ${fileInput.files[0].name}</li>`;
+          toast("Uploaded successfully");
+        } else {
+          toast("Upload failed");
+        }
+      };
+
+      xhr.onerror = () => toast("Network error");
+      xhr.send(formData);
+    }
+
+    // Query
+    async function askQuestion() {
+      const q = document.getElementById("questionInput").value.trim();
+      if (!q) return;
+
+      const box = document.getElementById("answerBox");
+      const text = document.getElementById("answerText");
+      box.classList.remove("hidden");
+      text.textContent = "Thinking…";
+
+      try {
+        const res = await fetch(`${API_BASE}/query`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: q })
+        });
+        const data = await res.json();
+        text.textContent = data.answer;
+      } catch {
+        text.textContent = "Failed to get answer";
+      }
+    }
+  </script>
+
+</body>
+</html>

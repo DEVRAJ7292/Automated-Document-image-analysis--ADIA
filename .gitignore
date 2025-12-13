@@ -1,0 +1,52 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# =========================
+# Virtual Environments
+# =========================
+.venv/
+venv/
+env/
+
+# =========================
+# Environment Variables / Secrets
+# =========================
+.env
+
+# =========================
+# OS / Editor junk
+# =========================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Data Artifacts (Generated)
+# =========================
+data/raw/
+data/processed/
+data/extracted/
+data/embeddings/
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Model / Cache
+# =========================
+*.pt
+*.bin
+*.onnx
