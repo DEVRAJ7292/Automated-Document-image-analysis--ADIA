@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from adia.core.config import get_settings
@@ -14,10 +14,6 @@ from adia.api.routes.query import router as query_router
 def create_app() -> FastAPI:
     """
     Application factory.
-
-    This pattern allows:
-    - Testing without side effects
-    - Multiple deployments (API, worker, etc.)
     """
 
     settings = get_settings()
@@ -34,7 +30,7 @@ def create_app() -> FastAPI:
     # ─────────────────────────────
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # tighten in production
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -48,17 +44,22 @@ def create_app() -> FastAPI:
     app.include_router(query_router, tags=["Query"])
 
     # ─────────────────────────────
-    # UI (Serve index.html at /)
+    # UI (Serve root index.html)
     # ─────────────────────────────
-    ui_dir = Path("ui")
+    root_index = Path("index.html")
 
-    if ui_dir.exists():
-        # Serve static assets if any (css/js/images)
-        app.mount("/static", StaticFiles(directory=ui_dir), name="static")
+    if root_index.exists():
+
+        # Optional: serve static assets if you add css/js later
+        app.mount(
+            "/static",
+            StaticFiles(directory="."),
+            name="static",
+        )
 
         @app.get("/", include_in_schema=False)
         def serve_ui():
-            return FileResponse(ui_dir / "index.html")
+            return FileResponse(root_index)
 
     return app
 
