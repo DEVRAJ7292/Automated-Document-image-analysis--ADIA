@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pathlib import Path
 
 from adia.core.config import get_settings
 from adia.core.logging import setup_logging
@@ -18,7 +21,6 @@ def create_app() -> FastAPI:
     """
 
     settings = get_settings()
-
     setup_logging()
 
     app = FastAPI(
@@ -39,13 +41,24 @@ def create_app() -> FastAPI:
     )
 
     # ─────────────────────────────
-    # Routes
+    # API Routes
     # ─────────────────────────────
     app.include_router(health_router, prefix="/health", tags=["Health"])
     app.include_router(upload_router, tags=["Documents"])
     app.include_router(query_router, tags=["Query"])
 
+    # ─────────────────────────────
+    # UI (Serve index.html at /)
+    # ─────────────────────────────
+    ui_dir = Path("ui")
 
+    if ui_dir.exists():
+        # Serve static assets if any (css/js/images)
+        app.mount("/static", StaticFiles(directory=ui_dir), name="static")
+
+        @app.get("/", include_in_schema=False)
+        def serve_ui():
+            return FileResponse(ui_dir / "index.html")
 
     return app
 
