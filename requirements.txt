@@ -1,11 +1,65 @@
+# ===============================
+# Core Web Framework
+# ===============================
 fastapi
 uvicorn[standard]
-sqlalchemy
-pydantic
-python-multipart
+
+# ===============================
+# Configuration & Environment
+# ===============================
 python-dotenv
+pydantic>=2.0
+pydantic-settings
+
+# ===============================
+# Database & ORM
+# ===============================
+sqlalchemy
+sqlalchemy-utils
+alembic
+
+# ===============================
+# File Uploads & Parsing
+# ===============================
+python-multipart
+aiofiles
+
+# ===============================
+# Image Processing & OCR
+# ===============================
 pillow
 opencv-python-headless
 pytesseract
 pdf2image
+
+# ===============================
+# NLP, Embeddings & Vector Search
+# ===============================
 numpy
+scipy
+scikit-learn
+sentence-transformers
+faiss-cpu
+
+# ===============================
+# Document Processing (Optional but Professional)
+# ===============================
+pymupdf
+pdfplumber
+
+# ===============================
+# Logging & Utilities
+# ===============================
+loguru
+tqdm
+
+# ===============================
+# HTTP & Async Support
+# ===============================
+httpx
+requests
+
+# ===============================
+# Deployment / Stability
+# ===============================
+gunicorn
