@@ -1,28 +1,21 @@
-# ADIA — Automated Document & Image Analysis
+# ADIA — Automated Document Intelligence
 
-ADIA is an end-to-end document intelligence system that ingests PDFs/images, extracts text (native PDF first, OCR fallback), builds semantic embeddings, and answers questions using a RAG pipeline.
+ADIA is an end-to-end document intelligence system that ingests PDFs and images, extracts text intelligently, and answers natural-language questions over the content.
 
-## What it does
-- Upload PDFs / images
-- Native PDF text extraction with OCR fallback
-- Text normalization
-- Semantic embeddings (SentenceTransformers)
-- Vector search with FAISS
-- Question answering via Gemini
-- FastAPI backend
-- Simple, clean UI
-- Dockerized with persistent storage
+It is designed as a **production-style backend**, not a tutorial project.
 
-## Tech Stack
-- **Backend:** FastAPI, Pydantic
-- **AI:** SentenceTransformers, FAISS, Gemini
-- **OCR:** Tesseract
-- **PDF:** pdfplumber
-- **DB:** SQLite (query logs)
-- **UI:** HTML + Tailwind
-- **Infra:** Docker, Docker Compose
+---
 
-## Run with Docker
-```bash
-docker compose build
-docker compose up
+##  What ADIA Does
+
+- Upload PDFs or images
+- Native PDF text extraction (OCR fallback only when needed)
+- Text normalization for dates and amounts
+- Semantic embeddings with vector search
+- Question answering using a Retrieval-Augmented Generation (RAG) pipeline
+- Clean UI for demo and client interaction
+- Fully containerized with Docker
+
+---
+
+##  Architecture Overview
