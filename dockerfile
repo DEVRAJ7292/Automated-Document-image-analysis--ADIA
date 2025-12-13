@@ -24,17 +24,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY src/ src/
-
-# ✅ COPY UI FILE INTO CONTAINER
 COPY index.html .
 
-# Optional: if you later add assets
-# COPY static/ static/
+# ✅ THIS IS THE CRITICAL LINE
+ENV PYTHONPATH=/app/src
 
 # Hugging Face uses port 7860
 EXPOSE 7860
 
 # ─────────────────────────────
+# Start FastAPI
+# ─────────────────────────────
+CMD ["uvicorn", "adia.api.main:app", "--host", "0.0.0.0", "--port", "7860"]# ─────────────────────────────
 # Start FastAPI
 # ─────────────────────────────
 CMD ["uvicorn", "adia.api.main:app", "--host", "0.0.0.0", "--port", "7860"]# -----------------------------
