@@ -1,17 +1,146 @@
 # ADIA — Automated Document Intelligence
 
-ADIA is an end-to-end document intelligence system built to process PDFs and images, extract meaningful text, and answer natural-language questions over the extracted content. The system is designed with a production mindset and focuses on correctness, reliability, and clean architecture rather than being a tutorial or experimental project.
+ADIA is an end-to-end **document intelligence system** that ingests PDFs and images, extracts text intelligently, and answers natural-language questions over the content using a Retrieval-Augmented Generation (RAG) pipeline.
 
-The core idea behind ADIA is to intelligently handle real-world documents. When a document is uploaded, the system first attempts native PDF text extraction whenever possible to preserve accuracy and performance. If the document does not contain extractable text or is image-based, OCR is automatically used as a fallback. The extracted text is normalized to handle common OCR issues such as incorrect dates and numeric formats.
+This project is designed as a **production-style backend system**, not a tutorial or proof-of-concept.
 
-Once clean text is available, ADIA generates semantic embeddings using a sentence-transformer model. These embeddings are stored in a FAISS vector index to allow fast and accurate semantic search across document content. When a user asks a question, the system retrieves the most relevant text segments from the vector index and uses a Retrieval-Augmented Generation pipeline to generate an answer using a large language model.
+---
 
-The backend is implemented using FastAPI with a clear separation of concerns across ingestion, OCR, embeddings, retrieval, and RAG logic. Query activity is logged using SQLite, and vector data is persisted to disk to ensure consistency across restarts. Model loading is handled carefully to avoid unnecessary reinitialization and latency during queries.
+## 🚀 What ADIA Does
 
-A lightweight HTML and Tailwind-based user interface is included for demonstration and client-facing interaction. The UI allows users to upload documents and ask questions in a simple and intuitive way while keeping the focus on backend intelligence rather than frontend complexity.
+- Upload PDFs and images
+- Native PDF text extraction (OCR used only when necessary)
+- OCR normalization for dates, numbers, and noisy text
+- Semantic embeddings and vector search
+- Natural-language question answering over documents
+- Lightweight UI for demos and client interaction
+- Fully containerized using Docker
 
-The entire system is containerized using Docker and Docker Compose, making it easy to run locally or deploy to the cloud. Environment variables are used for sensitive configuration, and no secrets or local data are committed to version control. The project structure and deployment approach are designed to support demos, internal tools, and early-stage client projects.
+---
 
-ADIA demonstrates a complete document intelligence workflow, from raw document ingestion to semantic understanding and question answering, using industry-standard tools and practices.
+## 🧠 High-Level Architecture
+
+Upload Document ↓ Native PDF Extraction ↓ OCR (Fallback Only) ↓ Text Normalization ↓ Sentence Embeddings ↓ FAISS Vector Index ↓ Semantic Retrieval ↓ LLM (Gemini) ↓ Answer
+
+---
+
+## 🛠 Tech Stack
+
+### Backend
+- FastAPI
+- Pydantic
+- SQLite (query logging)
+
+### AI / ML
+- SentenceTransformers
+- FAISS (vector search)
+- Gemini API (LLM)
+
+### Document Processing
+- pdfplumber
+- Tesseract OCR
+
+### Frontend
+- HTML
+- Tailwind CSS
+
+### Infrastructure
+- Docker
+- Docker Compose
+
+---
+
+## 🖥 Demo UI
+
+The repository includes a lightweight UI intended for:
+- Uploading documents
+- Asking natural-language questions
+- Viewing extracted answers
+
+The UI is intentionally minimal to keep the focus on **backend intelligence and data flow**.
+
+---
+
+## 🐳 Running Locally with Docker
+
+### Prerequisites
+- Docker
+- Docker Compose
+
+### Run
+```bash
+docker compose build
+docker compose up
+
+Access
+
+API Docs: http://localhost:8000/docs
+
+UI: Open ui/ui.html in a browser
+
+
+
+---
+
+📂 Repository Structure
+
+ADIA/
+├── Dockerfile
+├── docker-compose.yml
+├── README.md
+├── requirements.txt
+├── src/
+│   └── adia/
+│       ├── api/
+│       ├── core/
+│       ├── embeddings/
+│       ├── ocr/
+│       ├── rag/
+│       └── services/
+└── ui/
+    └── ui.html
+
+
+---
+
+🎯 Design Principles
+
+Clear separation of concerns
+
+Deterministic document processing
+
+No hardcoded secrets
+
+Persistent vector storage
+
+Model lifecycle managed to avoid reload latency
+
+Docker-first deployment mindset
+
+
+
+---
+
+📌 Project Status
+
+Core backend: ✅ Complete
+
+OCR + PDF extraction: ✅ Complete
+
+Vector search + RAG: ✅ Complete
+
+UI: ✅ Complete
+
+Dockerization: ✅ Complete
+
+Cloud deployment: 🔜 In progress
+
+
+
+---
+
+👤 Author
+
+Devraj Gadhvi
 
 Author: Devraj Gadhvi
