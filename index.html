@@ -2,67 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ADIA — Document Intelligence</title>
+  <title>ADIA — Automated Document Intelligence</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; }
+  </style>
 </head>
 
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-<header class="border-b border-slate-800">
-  <div class="max-w-5xl mx-auto px-6 py-4">
-    <h1 class="text-2xl font-semibold">ADIA</h1>
-    <p class="text-sm text-slate-400">Automated Document Intelligence</p>
-  </div>
-</header>
-
-<main class="max-w-5xl mx-auto px-6 py-10 space-y-10">
-
-  <!-- Upload -->
-  <section class="bg-white text-slate-900 rounded-xl shadow p-6">
-    <h2 class="text-lg font-medium mb-4">Upload Document</h2>
-
-    <input
-      type="file"
-      id="fileInput"
-      class="block w-full border border-slate-300 rounded-md p-2 mb-4"
-    />
-
-    <button
-      type="button"
-      onclick="uploadFile()"
-      class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
-    >
-      Upload
-    </button>
-
-    <p id="uploadStatus" class="text-sm mt-3"></p>
-  </section>
-
-  <!-- Query -->
-  <section class="bg-white text-slate-900 rounded-xl shadow p-6">
-    <h2 class="text-lg font-medium mb-4">Ask a Question</h2>
-
-    <textarea
-      id="questionInput"
-      rows="3"
-      placeholder="What is the name?"
-      class="w-full border border-slate-300 rounded-md p-2 mb-4"
-    ></textarea>
-
-    <button
-      type="button"
-      onclick="askQuestion()"
-      class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md"
-    >
-      Ask
-    </button>
-
-    <div id="answerBox" class="mt-6 hidden">
-      <h3 class="text-sm font-semibold text-slate-600">Answer</h3>
-      <p id="answerText" class="mt-2 text-lg"></p>
+  <header class="border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-6 py-4">
+      <h1 class="text-2xl font-semibold">ADIA</h1>
+      <p class="text-sm text-slate-400">Automated Document Intelligence</p>
     </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-10 space-y-8">
+
+    <!-- Upload -->
+    <section class="bg-white text-slate-900 rounded-xl shadow p-6">
+      <h2 class="text-lg font-medium mb-4">Upload Document</h2>
+
+      <input id="fileInput" type="file"
+        class="block mb-3 border border-slate-300 rounded-md p-2 w-full" />
+
+      <button type="button" onclick="uploadFile(event)"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
+        Upload
+      </button>
+
+      <p id="uploadStatus" class="text-sm mt-3"></p>
+    </section>
+
+    <!-- Query -->
+    <section class="bg-white text-slate-900 rounded-xl shadow p-6">
+      <h2 class="text-lg font-medium mb-4">Ask a Question</h2>
+
+      <textarea id="questionInput" rows="3"
+        class="w-full border border-slate-300 rounded-md p-2 mb-4"
+        placeholder="What is the total amount?"></textarea>
+
+      <button type="button" onclick="askQuestion(event)"
+        class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">
+        Ask
+      </button>
+
+      <div id="answerBox" class="mt-6 hidden">
+        <h3 class="text-sm font-semibold text-slate-600">Answer</h3>
+        <p id="answerText" class="mt-2 text-lg"></p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let hasUploaded = false;
+
+    async function uploadFile(event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const input = document.getElementById("fileInput");
+      const status = document.getElementById("uploadStatus");
+
+      if (!input.files.length) {
+        status.textContent = "Please select a file.";
+        return;
+      }
+
+      status.textContent = "Uploading…";
+
+      const formData = new FormData();
+      formData.append("file", input.files[0]);
+
+      try {
+        const res = await fetch("/upload", {
+          method: "POST",
+          body: formData,
+          cache: "no-store"
+        });
+
+        if (!res.ok) throw new Error("Upload failed");
+
+        hasUploaded = true;
+        status.textContent = "Upload successful ✅";
+      } catch {
+        status.textContent = "Upload failed ❌";
+      }
+    }
+
+    async function askQuestion(event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!hasUploaded) {
+        alert("Please upload a document first.");
+        return;
+      }
+
+      const q = document.getElementById("questionInput").value.trim();
+      if (!q) return;
+
+      const box = document.getElementById("answerBox");
+      const text = document.getElementById("answerText");
+
+      box.classList.remove("hidden");
+      text.textContent = "Thinking…";
+
+      try {
+        const res = await fetch("/query", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: q }),
+          cache: "no-store",
+          credentials: "same-origin"
+        });
+
+        const data = await res.json();
+        text.textContent = data.answer || "No answer found.";
+      } catch {
+        text.textContent = "Failed to get answer.";
+      }
+    }
+  </script>
+
+</body>
+</html>    </div>
   </section>
 
 </main>
