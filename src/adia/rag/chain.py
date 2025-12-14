@@ -35,18 +35,13 @@ class RAGChain:
     def answer(self, question: str, top_k: int = 5) -> Dict:
         """
         Answer a question using RAG.
-        Gracefully handles empty / missing FAISS index (HF refresh-safe).
+        Safe for Hugging Face stateless refreshes.
         """
-
         try:
             results = self.retriever.query(question, top_k=top_k)
         except Exception:
-            # Absolute safety net — never crash the API
             results = []
 
-        # ─────────────────────────────
-        # No documents indexed yet
-        # ─────────────────────────────
         if not results:
             return {
                 "answer": "No documents indexed yet. Please upload a document first.",
@@ -54,14 +49,33 @@ class RAGChain:
                 "sources": [],
             }
 
-        # ─────────────────────────────
-        # Build RAG context
-        # ─────────────────────────────
         context_chunks: List[str] = [r["text"] for r in results]
         context = "\n\n".join(context_chunks)
 
         prompt = build_rag_prompt(
             context=context,
+            question=question,
+        )
+
+        answer = self.llm.generate(prompt)
+
+        scores = [r.get("score", 0.0) for r in results]
+
+        sources = [
+            {
+                "document": r.get("metadata", {}).get("source"),
+                "chunk": r.get("metadata", {}).get("chunk_id"),
+                "similarity": round(r.get("score", 0.0), 3),
+                "text_preview": r.get("text", "")[:200].strip(),
+            }
+            for r in results
+        ]
+
+        return {
+            "answer": answer,
+            "confidence": compute_confidence(scores),
+            "sources": sources,
+        }            context=context,
             question=question,
         )
 
