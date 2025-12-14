@@ -10,58 +10,42 @@
   <style>
     body { font-family: Inter, system-ui, sans-serif; }
     .fade-in { animation: fadeIn .25s ease-out; }
-    @keyframes fadeIn { from {opacity:0; transform:translateY(4px)} to {opacity:1; transform:none} }
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(4px) }
+      to { opacity:1; transform:none }
+    }
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen transition-colors" id="app">
+<body class="bg-slate-950 text-slate-100 min-h-screen" id="app">
 
 <header class="border-b border-slate-800">
-  <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-semibold tracking-tight">ADIA</h1>
-      <p class="text-sm text-slate-400">Automated Document Intelligence</p>
-    </div>
-    <button onclick="toggleTheme()"
-      class="text-sm px-3 py-1.5 rounded-md border border-slate-700 hover:bg-slate-800">
-      Toggle Theme
-    </button>
+  <div class="max-w-5xl mx-auto px-6 py-4">
+    <h1 class="text-2xl font-semibold">ADIA</h1>
+    <p class="text-sm text-slate-400">Automated Document Intelligence</p>
   </div>
 </header>
 
 <main class="max-w-5xl mx-auto px-6 py-10 space-y-10">
 
-<section class="bg-white text-slate-900 rounded-xl shadow-lg p-6 fade-in">
+<section class="bg-white text-slate-900 rounded-xl shadow-lg p-6">
   <h2 class="text-lg font-medium mb-4">Upload Document</h2>
 
-  <div id="dropZone"
-    class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center cursor-pointer hover:border-indigo-500 transition">
-    <p class="text-slate-600">Drag & drop a PDF or image here</p>
-    <p class="text-xs text-slate-400 mt-1">or click to browse</p>
-    <input type="file" id="fileInput" class="hidden" />
-  </div>
+  <input type="file" id="fileInput" class="mb-4" />
 
-  <div class="mt-4 flex items-center gap-3">
-    <button onclick="uploadFile()"
-      class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
-      Upload
-    </button>
-    <div class="flex-1">
-      <div class="h-2 bg-slate-200 rounded overflow-hidden">
-        <div id="progressBar" class="h-2 bg-emerald-500 w-0 transition-all"></div>
-      </div>
-    </div>
-  </div>
+  <button onclick="uploadFile()"
+    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
+    Upload
+  </button>
 
   <p id="uploadStatus" class="text-sm mt-3"></p>
-  <ul id="fileList" class="mt-4 text-sm text-slate-700 space-y-1"></ul>
 </section>
 
-<section class="bg-white text-slate-900 rounded-xl shadow-lg p-6 fade-in">
+<section class="bg-white text-slate-900 rounded-xl shadow-lg p-6">
   <h2 class="text-lg font-medium mb-4">Ask a Question</h2>
 
   <textarea id="questionInput" rows="3"
-    placeholder="What is the date in the document?"
+    placeholder="What is the total amount?"
     class="w-full border border-slate-300 rounded-md p-2 mb-4"></textarea>
 
   <button onclick="askQuestion()"
@@ -77,69 +61,50 @@
 
 </main>
 
-<div id="toast"
-  class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-2 rounded-lg shadow-lg hidden"></div>
-
 <script>
-  // ✅ SAME-ORIGIN API (CRITICAL FIX)
+  // SAME-ORIGIN API (HF SAFE)
   const API_BASE = "";
 
-  const app = document.getElementById("app");
-  const dropZone = document.getElementById("dropZone");
-  const fileInput = document.getElementById("fileInput");
-  const progressBar = document.getElementById("progressBar");
-  const fileList = document.getElementById("fileList");
-
-  dropZone.onclick = () => fileInput.click();
-  dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add("border-indigo-500"); };
-  dropZone.ondragleave = () => dropZone.classList.remove("border-indigo-500");
-  dropZone.ondrop = e => {
-    e.preventDefault();
-    dropZone.classList.remove("border-indigo-500");
-    fileInput.files = e.dataTransfer.files;
-  };
-
-  function toast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.remove("hidden");
-    setTimeout(() => t.classList.add("hidden"), 2200);
-  }
-
   async function uploadFile() {
-    if (!fileInput.files.length) return toast("Select a file first");
+    const input = document.getElementById("fileInput");
+    const status = document.getElementById("uploadStatus");
+
+    if (!input.files.length) {
+      status.textContent = "Please select a file first.";
+      return;
+    }
 
     const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
+    formData.append("file", input.files[0]);
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${API_BASE}/upload`);
+    status.textContent = "Uploading…";
 
-    xhr.upload.onprogress = e => {
-      if (e.lengthComputable) {
-        progressBar.style.width = `${(e.loaded / e.total) * 100}%`;
+    try {
+      const res = await fetch(`${API_BASE}/upload`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
       }
-    };
 
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        fileList.innerHTML += `<li>✓ ${fileInput.files[0].name}</li>`;
-        toast("Uploaded successfully");
-      } else {
-        toast("Upload failed");
-      }
-    };
+      status.textContent = "Upload successful ✅";
 
-    xhr.onerror = () => toast("Network error");
-    xhr.send(formData);
+    } catch (err) {
+      console.error(err);
+      status.textContent = "Upload failed ❌";
+    }
   }
 
   async function askQuestion() {
     const q = document.getElementById("questionInput").value.trim();
-    if (!q) return;
-
     const box = document.getElementById("answerBox");
     const text = document.getElementById("answerText");
+
+    if (!q) return;
+
     box.classList.remove("hidden");
     text.textContent = "Thinking…";
 
@@ -149,8 +114,10 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q })
       });
+
       const data = await res.json();
       text.textContent = data.answer;
+
     } catch {
       text.textContent = "Failed to get answer";
     }
