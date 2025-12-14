@@ -5,6 +5,7 @@
   <title>ADIA — Document Intelligence</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
@@ -17,52 +18,55 @@
   </style>
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen" id="app">
+<body class="bg-slate-950 text-slate-100 min-h-screen transition-colors">
 
 <header class="border-b border-slate-800">
   <div class="max-w-5xl mx-auto px-6 py-4">
-    <h1 class="text-2xl font-semibold">ADIA</h1>
+    <h1 class="text-2xl font-semibold tracking-tight">ADIA</h1>
     <p class="text-sm text-slate-400">Automated Document Intelligence</p>
   </div>
 </header>
 
 <main class="max-w-5xl mx-auto px-6 py-10 space-y-10">
 
-<section class="bg-white text-slate-900 rounded-xl shadow-lg p-6">
-  <h2 class="text-lg font-medium mb-4">Upload Document</h2>
+  <!-- Upload Section -->
+  <section class="bg-white text-slate-900 rounded-xl shadow-lg p-6 fade-in">
+    <h2 class="text-lg font-medium mb-4">Upload Document</h2>
 
-  <input type="file" id="fileInput" class="mb-4" />
+    <input type="file" id="fileInput"
+      class="block mb-4 border border-slate-300 rounded-md p-2 w-full" />
 
-  <button onclick="uploadFile()"
-    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
-    Upload
-  </button>
+    <button onclick="uploadFile()"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
+      Upload
+    </button>
 
-  <p id="uploadStatus" class="text-sm mt-3"></p>
-</section>
+    <p id="uploadStatus" class="text-sm mt-3"></p>
+  </section>
 
-<section class="bg-white text-slate-900 rounded-xl shadow-lg p-6">
-  <h2 class="text-lg font-medium mb-4">Ask a Question</h2>
+  <!-- Query Section -->
+  <section class="bg-white text-slate-900 rounded-xl shadow-lg p-6 fade-in">
+    <h2 class="text-lg font-medium mb-4">Ask a Question</h2>
 
-  <textarea id="questionInput" rows="3"
-    placeholder="What is the total amount?"
-    class="w-full border border-slate-300 rounded-md p-2 mb-4"></textarea>
+    <textarea id="questionInput" rows="3"
+      placeholder="What is the total amount?"
+      class="w-full border border-slate-300 rounded-md p-2 mb-4"></textarea>
 
-  <button onclick="askQuestion()"
-    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">
-    Ask
-  </button>
+    <button onclick="askQuestion()"
+      class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">
+      Ask
+    </button>
 
-  <div id="answerBox" class="mt-6 hidden">
-    <h3 class="text-sm font-semibold text-slate-600">Answer</h3>
-    <p id="answerText" class="mt-2 text-lg"></p>
-  </div>
-</section>
+    <div id="answerBox" class="mt-6 hidden">
+      <h3 class="text-sm font-semibold text-slate-600">Answer</h3>
+      <p id="answerText" class="mt-2 text-lg"></p>
+    </div>
+  </section>
 
 </main>
 
 <script>
-  // SAME-ORIGIN API (HF SAFE)
+  // IMPORTANT: same-origin API for Hugging Face
   const API_BASE = "";
 
   async function uploadFile() {
@@ -82,7 +86,9 @@
     try {
       const res = await fetch(`${API_BASE}/upload`, {
         method: "POST",
-        body: formData
+        body: formData,
+        cache: "no-store",
+        credentials: "same-origin"
       });
 
       if (!res.ok) {
@@ -112,14 +118,22 @@
       const res = await fetch(`${API_BASE}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q })
+        body: JSON.stringify({ question: q }),
+        cache: "no-store",
+        credentials: "same-origin"
       });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText);
+      }
 
       const data = await res.json();
       text.textContent = data.answer;
 
-    } catch {
-      text.textContent = "Failed to get answer";
+    } catch (err) {
+      console.error(err);
+      text.textContent = "Failed to get answer ❌";
     }
   }
 </script>
