@@ -9,6 +9,7 @@ from adia.core.logging import setup_logging
 from adia.api.routes.health import router as health_router
 from adia.api.routes.upload import router as upload_router
 from adia.api.routes.query import router as query_router
+from adia.db.database import init_db   # ✅ ADD THIS
 
 
 def create_app() -> FastAPI:
@@ -42,6 +43,11 @@ def create_app() -> FastAPI:
     app.include_router(health_router, prefix="/health", tags=["Health"])
     app.include_router(upload_router, tags=["Documents"])
     app.include_router(query_router, tags=["Query"])
+
+    # ─────────────────────────────
+    # Initialize Database (CRITICAL FIX)
+    # ─────────────────────────────
+    init_db()
 
     # ─────────────────────────────
     # UI (Serve root index.html)
