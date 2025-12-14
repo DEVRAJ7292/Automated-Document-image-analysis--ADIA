@@ -1,35 +1,54 @@
 from pathlib import Path
-from fastapi import APIRouter, HTTPException
+from typing import List, Dict
 
-from adia.api.schemas.query import QueryRequest, QueryResponse
-from adia.rag.chain import RAGChain
+from adia.embeddings.retriever import SemanticRetriever
+from adia.rag.llm import LLMClient
+from adia.rag.prompt_templates import build_rag_prompt
 
-router = APIRouter()
+
+def compute_confidence(scores: List[float]) -> int:
+    if not scores:
+        return 0
+
+    top = max(scores)
+    confidence = top * 100
+    return int(round(max(0, min(confidence, 100))))
 
 
-@router.post(
-    "/query",
-    summary="Ask questions over uploaded documents",
-    response_model=QueryResponse,
-)
-def query_documents(payload: QueryRequest):
-    try:
-        rag = RAGChain(
-            embeddings_path=Path("data/embeddings/index.faiss")
-        )
+class RAGChain:
+    def __init__(self, embeddings_path: Path):
+        self.retriever = SemanticRetriever(index_path=embeddings_path)
+        self.llm = LLMClient()
 
-        result = rag.answer(payload.question)
+    def answer(self, question: str, top_k: int = 5) -> Dict:
+        results = self.retriever.query(question, top_k=top_k)
 
-        # ✅ Normalize output for UI
-        if isinstance(result, dict):
-            answer_text = result.get("answer", "No answer found.")
-        else:
-            answer_text = result
+        if not results:
+            return {
+                "answer": "No answer found.",
+                "confidence": 0,
+                "sources": [],
+            }
 
-        return QueryResponse(answer=answer_text)
+        context_chunks = [r["text"] for r in results]
+        context = "\n\n".join(context_chunks)
 
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=str(exc),
-        )
+        prompt = build_rag_prompt(context=context, question=question)
+        answer = self.llm.generate(prompt)
+
+        scores = [r["score"] for r in results]
+
+        sources = [
+            {
+                "document": r["metadata"].get("source"),
+                "similarity": round(r["score"], 3),
+                "text_preview": r["text"][:200],
+            }
+            for r in results
+        ]
+
+        return {
+            "answer": answer,
+            "confidence": compute_confidence(scores),
+            "sources": sources,
+        }
