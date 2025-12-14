@@ -1,11 +1,8 @@
 from pathlib import Path
-
 from fastapi import APIRouter, HTTPException
 
 from adia.api.schemas.query import QueryRequest, QueryResponse
 from adia.rag.chain import RAGChain
-from adia.db.database import SessionLocal
-from adia.db.crud import log_query
 
 router = APIRouter()
 
@@ -16,7 +13,6 @@ router = APIRouter()
     response_model=QueryResponse,
 )
 def query_documents(payload: QueryRequest):
-    db = SessionLocal()
     try:
         rag = RAGChain(
             embeddings_path=Path("data/embeddings/index.faiss")
@@ -24,18 +20,11 @@ def query_documents(payload: QueryRequest):
 
         result = rag.answer(payload.question)
 
-        # 🔑 FIX: store only text, not dict
-        answer_text = (
-            result["answer"]
-            if isinstance(result, dict)
-            else result
-        )
-
-        log_query(
-            db=db,
-            question=payload.question,
-            answer=answer_text,
-        )
+        # ✅ Normalize output for UI
+        if isinstance(result, dict):
+            answer_text = result.get("answer", "No answer found.")
+        else:
+            answer_text = result
 
         return QueryResponse(answer=answer_text)
 
@@ -44,5 +33,3 @@ def query_documents(payload: QueryRequest):
             status_code=500,
             detail=str(exc),
         )
-    finally:
-        db.close()
