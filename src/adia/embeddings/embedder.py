@@ -1,59 +1,41 @@
 from pathlib import Path
 from typing import List, Dict
 
-from adia.embeddings.embedder import Embedder
+from sentence_transformers import SentenceTransformer
+
 from adia.embeddings.faiss_index import FaissIndex
 
 
-# ✅ GLOBAL IN-MEMORY FAISS (HF-SAFE)
-_FAISS_INDEX = None
-
-
-class SemanticRetriever:
+class Embedder:
     """
-    Semantic search over embedded documents using FAISS.
+    Canonical embedding service for ADIA.
     """
 
     def __init__(
         self,
-        index_path: Path = Path("data/embeddings/index.faiss"),
         model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
+        index_path: Path = Path("data/embeddings/index.faiss"),
     ):
-        global _FAISS_INDEX
+        self.model = SentenceTransformer(model_name)
+        self.index = FaissIndex(index_path=index_path)
 
-        self.embedder = Embedder(
-            model_name=model_name,
-            index_path=index_path,
+    def embed(self, texts: List[str]):
+        if not texts:
+            raise ValueError("No texts provided for embedding")
+
+        return self.model.encode(
+            texts,
+            convert_to_numpy=True,
+            show_progress_bar=False,
         )
 
-        if _FAISS_INDEX is None:
-            _FAISS_INDEX = self.embedder.index
+    def build_index(
+        self,
+        texts: List[str],
+        metadatas: List[Dict],
+    ) -> None:
+        if len(texts) != len(metadatas):
+            raise ValueError("texts and metadatas length mismatch")
 
-        self.index = _FAISS_INDEX
-
-    def query(self, query: str, top_k: int = 5) -> List[Dict]:
-        if self.index.index is None:
-            return []
-
-        query_embedding = self.embedder.embed([query])
-
-        distances, indices = self.index.index.search(
-            query_embedding,
-            top_k,
-        )
-
-        results: List[Dict] = []
-
-        for rank, idx in enumerate(indices[0]):
-            if idx < 0 or idx >= len(self.index.texts):
-                continue
-
-            results.append(
-                {
-                    "text": self.index.texts[idx],
-                    "metadata": self.index.metadatas[idx],
-                    "score": float(1 / (1 + distances[0][rank])),
-                }
-            )
-
-        return results
+        embeddings = self.embed(texts)
+        self.index.add(embeddings, texts, metadatas)
